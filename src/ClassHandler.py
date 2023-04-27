@@ -6,26 +6,36 @@ class Voter:
     A class representing a voter with their personal information and political ideologies.
 
     Attributes:
-    first_name (str): The first name of the voter.
-    last_name (str): The last name of the voter.
-    age (int): The age of the voter.
-    economic_ideology (float): The economic ideology of the voter, ranging from 0 (left) to 1 (right).
-    diplomatic_ideology (float): The diplomatic ideology of the voter, ranging from 0 (isolationist) to 1 (internationalist).
-    civil_ideology (float): The civil ideology of the voter, ranging from 0 (authoritarian) to 1 (libertarian).
-    social_ideology (float): The social ideology of the voter, ranging from 0 (conservative) to 1 (progressive).
+    - first_name (str): The first name of the voter.
+    - last_name (str): The last name of the voter.
+    - age (int): The age of the voter.
+    - economic_ideology (float): The economic ideology of the voter, ranging from 0 to 1.
+    - diplomatic_ideology (float): The diplomatic ideology of the voter, ranging from 0 to 1.
+    - civil_ideology (float): The civil ideology of the voter, ranging from 0 to 1.
+    - social_ideology (float): The social ideology of the voter, ranging from 0 to 1.
 
     Methods:
-    str(): Returns a string representation of the voter's information.
-    repr(): Returns a string representation of the voter's information.
-
-    Usage:
-    voter = Voter(first_name='John', last_name='Doe', age=25, economic_ideology=5.0,
-    diplomatic_ideology=7.5, civil_ideology=-2.0, social_ideology=8.0)
-    print(voter)
-    # prints 'John Doe\nAge: 25\nEconomic Ideology: 5.0\nDiplomatic Ideology: 7.5\nCivil Ideology: -2.0\nSocial Ideology: 8.0'
+    - __str__(): Returns a string representation of the voter's information.
+    - __repr__(): Returns a string representation of the voter's information.
+    - determine_most_suitable_party(parties): Determines the political party that is most suitable for the voter based
+        on their ideological positions.
     """
+
     def __init__(self, first_name: str, last_name: str, age: int, economic_ideology: float,
-                 diplomatic_ideology: float, civil_ideology: float, social_ideology: float):
+                 diplomatic_ideology: float, civil_ideology: float, social_ideology: float, election):
+        """
+        Initializes a Voter object with their personal information and political ideologies.
+
+        Args:
+            first_name (str): The first name of the voter.
+            last_name (str): The last name of the voter.
+            age (int): The age of the voter.
+            economic_ideology (float): The economic ideology of the voter, ranging from 0 to 1.
+            diplomatic_ideology (float): The diplomatic ideology of the voter, ranging from 0 to 1.
+            civil_ideology (float): The civil ideology of the voter, ranging from 0 to 1.
+            social_ideology (float): The social ideology of the voter, ranging from 0 to 1.
+            election: The Election object the Voter is part of.
+        """
         self.first_name: str = first_name
         self.last_name: str = last_name
         self.age: int = age
@@ -33,6 +43,7 @@ class Voter:
         self.diplomatic_ideology: float = diplomatic_ideology
         self.civil_ideology: float = civil_ideology
         self.social_ideology: float = social_ideology
+        self.preferred_party: Party = self.determine_most_suitable_party(election.parties)
 
     def __str__(self):
         """
@@ -51,6 +62,30 @@ class Voter:
         """
         return self.__str__()
 
+    def determine_most_suitable_party(self, parties):
+        """
+        Determines the most suitable party for the voter based on their ideological positions.
+
+        Args:
+            parties: A list of Party objects representing the available political parties in the election.
+
+        Returns:
+            The Party object that is most ideologically compatible with the voter.
+        """
+        party_scores = []
+
+        for party in parties:
+            voter_party_difference = [abs(self.economic_ideology - party.economic_ideology),
+                                      abs(self.diplomatic_ideology - party.diplomatic_ideology),
+                                      abs(self.civil_ideology - party.civil_ideology),
+                                      abs(self.social_ideology - party.social_ideology)]
+
+            voter_difference_total = sum(voter_party_difference)
+            party_scores.append(voter_difference_total)
+
+        most_suitable_party = parties[party_scores.index(min(party_scores))]
+        return most_suitable_party
+
 
 class Party:
     """
@@ -64,8 +99,8 @@ class Party:
     - social_ideology (str): the social ideology of the party.
 
     Methods:
-    - __str__(): returns a string representation of the party's name and ideological positions.
-    - __repr__(): returns a string representation of the party's name and ideological positions.
+    - __str__(): Returns a string representation of the party's name and ideological positions.
+    - __repr__(): Returns a string representation of the party's name and ideological positions.
     """
 
     def __init__(self, name, economic_ideology, diplomatic_ideology, civil_ideology, social_ideology):
@@ -96,25 +131,24 @@ class Election:
     """
     A class representing an election with voters and political parties.
 
-    python
-    Copy code
     Attributes:
     - voters (list): a list of Voter objects representing the voters in the election.
     - parties (list): a list of Party objects representing the political parties in the election.
 
     Methods:
-    - __str__(): returns a string representation of the election's voters and parties.
-    - __repr__(): returns a string representation of the election's voters and parties.
-    - generate_voter_list(nof_voters): generates a list of voters with random attributes.
+    - __str__(): Returns a string representation of the election's voters and parties.
+    - __repr__(): Returns a string representation of the election's voters and parties.
+    - generate_election(nof_voters): Generates a list of voters with random attributes.
     """
-    def __init__(self):
+
+    def __init__(self, nof_voters=1000):
         """
         Initializes an Election object with an empty list of voters and an empty list of parties.
-        Generates a list of voters using the generate_voter_list method.
+        Generates a list of voters using the generate_election method.
         """
         self.voters = []
         self.parties = []
-        self.generate_voter_list()
+        self.generate_election(nof_voters)
 
     def __str__(self):
         """
@@ -129,7 +163,7 @@ class Election:
         """
         return self.__str__()
 
-    def generate_voter_list(self, nof_voters=1000):
+    def generate_election(self, nof_voters=1000, nof_parties=5):
         """
         Generates a list of voters with random attributes.
 
@@ -145,7 +179,16 @@ class Election:
             last_names_f = f.readlines()
             last_names_f = [x.strip() for x in last_names_f]
 
+        with open("data/party_names.txt", "r") as f:
+            parties_f = f.readlines()
+            parties_f = [x.strip() for x in parties_f]
+
+        # Generates a list of parties
+        for i in range(nof_parties):
+            self.parties.append(Party(parties_f[i], round(random.random(), 2), round(random.random(), 2),
+                                      round(random.random(), 2), round(random.random(), 2)))
+
         for i in range(nof_voters):
             self.voters.append(Voter(random.choice(first_names_f), random.choice(last_names_f), random.randint(18, 100),
                                      round(random.random(), 2), round(random.random(), 2), round(random.random(), 2),
-                                     round(random.random(), 2)))
+                                     round(random.random(), 2), self))
