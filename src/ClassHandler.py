@@ -1,4 +1,5 @@
 import random
+import matplotlib.pyplot as plt
 
 
 class Voter:
@@ -109,6 +110,7 @@ class Party:
         self.diplomatic_ideology = diplomatic_ideology
         self.civil_ideology = civil_ideology
         self.social_ideology = social_ideology
+        self.votes = 0
 
     def __str__(self):
         """
@@ -141,14 +143,19 @@ class Election:
     - generate_election(nof_voters): Generates a list of voters with random attributes.
     """
 
-    def __init__(self, nof_voters=1000):
+    def __init__(self, nof_voters=1000, nof_parties=5, prearrange_list=False):
         """
         Initializes an Election object with an empty list of voters and an empty list of parties.
         Generates a list of voters using the generate_election method.
+
+        Args:
+        - nof_voters (int): the number of voters to generate.
+        - nof_parties (int): the number of parties to generate.
         """
         self.voters = []
         self.parties = []
-        self.generate_election(nof_voters)
+        if not prearrange_list:
+            self.prepare_election(nof_voters, nof_parties)
 
     def __str__(self):
         """
@@ -163,25 +170,38 @@ class Election:
         """
         return self.__str__()
 
-    def generate_election(self, nof_voters=1000, nof_parties=5):
+    def prepare_election(self, nof_voters, nof_parties):
         """
-        Generates a list of voters with random attributes.
+        Generates a list of voters and parties with random attributes.
 
         Args:
-        - nof_voters (int): the number of voters to generate. Default is 1000.
+        - nof_voters (int): the number of voters to generate.
+        - nof_parties (int): the number of parties to generate.
         """
         # Opens the file and reads the contents into a list
-        with open("data/first_names.txt", "r") as f:
-            first_names_f = f.readlines()
-            first_names_f = [x.strip() for x in first_names_f]
+        path = "/Users/harveywalker/VotingMethods/data/first_names.txt"
+        try:
+            with open(path, "r") as f:
+                first_names_f = f.readlines()
+                first_names_f = [x.strip() for x in first_names_f]
+        except FileNotFoundError:
+            raise FileNotFoundError("Error! Could not load first_names.txt")
 
-        with open("data/last_names.txt", "r") as f:
-            last_names_f = f.readlines()
-            last_names_f = [x.strip() for x in last_names_f]
+        path = "/Users/harveywalker/VotingMethods/data/last_names.txt"
+        try:
+            with open(path, "r") as f:
+                last_names_f = f.readlines()
+                last_names_f = [x.strip() for x in last_names_f]
+        except FileNotFoundError:
+            raise FileNotFoundError("Error! Could not load last_names.txt")
 
-        with open("data/party_names.txt", "r") as f:
-            parties_f = f.readlines()
-            parties_f = [x.strip() for x in parties_f]
+        path = "/Users/harveywalker/VotingMethods/data/party_names.txt"
+        try:
+            with open(path, "r") as f:
+                parties_f = f.readlines()
+                parties_f = [x.strip() for x in parties_f]
+        except FileNotFoundError:
+            raise FileNotFoundError("Error! Could not load party_names.txt")
 
         # Generates a list of parties
         for i in range(nof_parties):
@@ -192,3 +212,40 @@ class Election:
             self.voters.append(Voter(random.choice(first_names_f), random.choice(last_names_f), random.randint(18, 100),
                                      round(random.random(), 2), round(random.random(), 2), round(random.random(), 2),
                                      round(random.random(), 2), self))
+
+    def FPTP_vote(self):
+        for party in self.parties:
+            for voter in self.voters:
+                if voter.preferred_party == party:
+                    party.votes += 1
+
+        sorted_parties = sorted(self.parties, key=lambda party: party.votes, reverse=True)
+        winner = sorted_parties[0]
+        print(f"The winner is {winner.name} with {winner.votes} votes")
+
+        self.generate_pie_charts(winner)
+        return winner
+
+    def generate_pie_charts(self, winner):
+        # Assume that we have a variable named "winner" that stores the winning party
+        winner_name = winner.name
+        winner_votes = winner.votes
+
+        # Get the list of all party names and their votes
+        party_names = [party.name for party in self.parties]
+        party_votes = [party.votes for party in self.parties]
+
+        # Find the index of the winning party in the list of all parties
+        winner_index = party_names.index(winner_name)
+
+        # Make a list of colors for the pie chart
+        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+
+        # Make the pie chart
+        plt.pie(party_votes, labels=party_names, colors=colors,
+                explode=[0 if i != winner_index else 0.1 for i in range(len(party_names))],
+                autopct='%1.1f%%', shadow=True, startangle=140)
+        plt.axis('equal')
+        plt.title('Election Results')
+        plt.legend(loc='best')
+        plt.show()
