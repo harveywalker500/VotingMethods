@@ -1,5 +1,6 @@
 import random
 import matplotlib.pyplot as plt
+from tqdm import *
 
 
 class Voter:
@@ -14,6 +15,7 @@ class Voter:
     - diplomatic_ideology (float): The diplomatic ideology of the voter, ranging from 0 to 1.
     - civil_ideology (float): The civil ideology of the voter, ranging from 0 to 1.
     - social_ideology (float): The social ideology of the voter, ranging from 0 to 1.
+    - preferred_party (Party): The political party that is most suitable for the voter based on their ideology spectrum
 
     Methods:
     - __str__(): Returns a string representation of the voter's information.
@@ -141,6 +143,8 @@ class Election:
     - __str__(): Returns a string representation of the election's voters and parties.
     - __repr__(): Returns a string representation of the election's voters and parties.
     - generate_election(nof_voters): Generates a list of voters with random attributes.
+    - FPTP_vote(): Determines the winner of the election using First Past The Post.
+    - generate_pie_charts(): Generates pie charts of the election winners.
     """
 
     def __init__(self, nof_voters=1000, nof_parties=5, prearrange_list=False):
@@ -214,8 +218,9 @@ class Election:
                                      round(random.random(), 2), self))
 
     def FPTP_vote(self):
+        """Determines the winner of the election using First Past The Post. Returns the winner of the party."""
         for party in self.parties:
-            for voter in self.voters:
+            for voter in tqdm(self.voters, desc=f"Counting votes for {party.name}", unit="voters"):
                 if voter.preferred_party == party:
                     party.votes += 1
 
@@ -227,22 +232,17 @@ class Election:
         return winner
 
     def generate_pie_charts(self, winner):
-        # Assume that we have a variable named "winner" that stores the winning party
+        """Creates a pie chart of the election results."""
         winner_name = winner.name
-        winner_votes = winner.votes
 
-        # Get the list of all party names and their votes
         party_names = [party.name for party in self.parties]
         party_votes = [party.votes for party in self.parties]
 
-        # Find the index of the winning party in the list of all parties
         winner_index = party_names.index(winner_name)
 
-        # Make a list of colors for the pie chart
-        colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
+        colours = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
 
-        # Make the pie chart
-        plt.pie(party_votes, labels=party_names, colors=colors,
+        plt.pie(party_votes, labels=party_names, colors=colours,
                 explode=[0 if i != winner_index else 0.1 for i in range(len(party_names))],
                 autopct='%1.1f%%', shadow=True, startangle=140)
         plt.axis('equal')
