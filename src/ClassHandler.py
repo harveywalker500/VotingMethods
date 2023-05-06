@@ -1,6 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 from tqdm import *
+import itertools
 
 
 class Voter:
@@ -24,6 +25,8 @@ class Voter:
         on their ideological positions.
     """
 
+    id_obj = itertools.count()
+
     def __init__(self, first_name: str, last_name: str, age: int, economic_ideology: float,
                  diplomatic_ideology: float, civil_ideology: float, social_ideology: float, election):
         """
@@ -39,6 +42,7 @@ class Voter:
             social_ideology (float): The social ideology of the voter, ranging from 0 to 1.
             election: The Election object the Voter is part of.
         """
+        self.id = str("V" + str(next(Voter.id_obj)))
         self.first_name: str = first_name
         self.last_name: str = last_name
         self.age: int = age
@@ -53,6 +57,7 @@ class Voter:
         Returns a string representation of the voter's name and ideological positions.
         """
         return f"""{self.first_name} {self.last_name}
+        ID: {self.id}
         Age: {self.age}
         Economic Ideology: {self.economic_ideology}
         Diplomatic Ideology: {self.diplomatic_ideology}
@@ -106,7 +111,10 @@ class Party:
     - __repr__(): Returns a string representation of the party's name and ideological positions.
     """
 
+    id_obj = itertools.count()
+
     def __init__(self, name, economic_ideology, diplomatic_ideology, civil_ideology, social_ideology):
+        self.id = str("P" + str(next(Party.id_obj)))
         self.name = name
         self.economic_ideology = economic_ideology
         self.diplomatic_ideology = diplomatic_ideology
@@ -119,6 +127,7 @@ class Party:
         Returns a string representation of the party's name and ideological positions.
         """
         return f"""{self.name}
+        ID: {self.id}
         Economic Ideology: {self.economic_ideology}
         Diplomatic Ideology: {self.diplomatic_ideology}
         Civil Ideology: {self.civil_ideology}
@@ -155,6 +164,7 @@ class Election:
         Args:
         - nof_voters (int): the number of voters to generate.
         - nof_parties (int): the number of parties to generate.
+        - prearrange_list (bool): whether to generate a list of voters and parties or not.
         """
         self.voters = []
         self.parties = []
@@ -174,34 +184,42 @@ class Election:
         """
         return self.__str__()
 
-    def prepare_election(self, nof_voters, nof_parties):
+    def prepare_election(self, nof_voters, nof_parties, first_name_path=None, last_name_path=None,
+                         party_name_path=None):
         """
         Generates a list of voters and parties with random attributes.
 
         Args:
         - nof_voters (int): the number of voters to generate.
         - nof_parties (int): the number of parties to generate.
+        - first_name_path (str): the path to the first_names.txt file.
+        - last_name_path (str): the path to the last_names.txt file.
+        - party_name_path (str): the path to the party_names.txt file.
         """
         # Opens the file and reads the contents into a list
-        path = "/Users/harveywalker/VotingMethods/data/first_names.txt"
+        if not first_name_path:
+            first_name_path = input("Enter the path to the first_names.txt file: ")
+        if not last_name_path:
+            last_name_path = input("Enter the path to the last_names.txt file: ")
+        if not party_name_path:
+            party_name_path = input("Enter the path to the party_names.txt file: ")
+
         try:
-            with open(path, "r") as f:
+            with open(first_name_path, "r") as f:
                 first_names_f = f.readlines()
                 first_names_f = [x.strip() for x in first_names_f]
         except FileNotFoundError:
             raise FileNotFoundError("Error! Could not load first_names.txt")
 
-        path = "/Users/harveywalker/VotingMethods/data/last_names.txt"
         try:
-            with open(path, "r") as f:
+            with open(last_name_path, "r") as f:
                 last_names_f = f.readlines()
                 last_names_f = [x.strip() for x in last_names_f]
         except FileNotFoundError:
             raise FileNotFoundError("Error! Could not load last_names.txt")
 
-        path = "/Users/harveywalker/VotingMethods/data/party_names.txt"
         try:
-            with open(path, "r") as f:
+            with open(party_name_path, "r") as f:
                 parties_f = f.readlines()
                 parties_f = [x.strip() for x in parties_f]
         except FileNotFoundError:
@@ -249,3 +267,87 @@ class Election:
         plt.title('Election Results')
         plt.legend(loc='best')
         plt.show()
+
+    def clear_parties(self):
+        """Clears the list of parties."""
+        self.parties = []
+
+    def clear_voters(self):
+        """Clears the list of voters."""
+        self.voters = []
+
+    def add_party(self, name: str, economic_ideology: float, diplomatic_ideology: float, civil_ideology: float,
+                  social_ideology: float):
+        """
+        Adds a new party to the election.
+
+        Args:
+        - name (str): the name of the party.
+        - economic_ideology (float): the economic ideology of the party.
+        - diplomatic_ideology (float): the diplomatic ideology of the party.
+        - civil_ideology (float): the civil ideology of the party.
+        - social_ideology (float): the social ideology of the party.
+        """
+        if not name:
+            name = input("Enter the name of the party: ")
+        if not economic_ideology:
+            economic_ideology = float(input("Enter the economic ideology of the party: "))
+        if not diplomatic_ideology:
+            diplomatic_ideology = float(input("Enter the diplomatic ideology of the party: "))
+        if not civil_ideology:
+            civil_ideology = float(input("Enter the civil ideology of the party: "))
+        if not social_ideology:
+            social_ideology = float(input("Enter the social ideology of the party: "))
+
+        self.parties.append(Party(name, economic_ideology, diplomatic_ideology, civil_ideology, social_ideology))
+
+    def add_voter(self, first_name: str, last_name: str, age: int, economic_ideology: float,
+                  diplomatic_ideology: float, civil_ideology: float, social_ideology: float):
+        """Adds a voter to the list of voters.
+
+        Args:
+        - first_name (str): the first name of the voter.
+        - last_name (str): the last name of the voter.
+        - age (int): the age of the voter.
+        - economic_ideology (float): the economic ideology of the voter.
+        - diplomatic_ideology (float): the diplomatic ideology of the voter.
+        - civil_ideology (float): the civil ideology of the voter.
+        - social_ideology (float): the social ideology of the voter.
+        """
+        if not first_name:
+            first_name = input("Enter the first name of the voter: ")
+        if not last_name:
+            last_name = input("Enter the last name of the voter: ")
+        if not age:
+            age = input("Enter the age of the voter: ")
+        if not economic_ideology:
+            economic_ideology = input("Enter the economic ideology of the voter: ")
+        if not diplomatic_ideology:
+            diplomatic_ideology = input("Enter the diplomatic ideology of the voter: ")
+        if not civil_ideology:
+            civil_ideology = input("Enter the civil ideology of the voter: ")
+        if not social_ideology:
+            social_ideology = input("Enter the social ideology of the voter: ")
+
+        self.voters.append(Voter(first_name, last_name, age, economic_ideology, diplomatic_ideology,
+                                 civil_ideology, social_ideology, self))
+
+    def delete_party(self, party_id):
+        """Deletes a party from the list of parties."""
+        if not party_id:
+            party_id = input("Enter the ID of the party you want to delete: ")
+
+        for party in self.parties:
+            if party.id == party_id:
+                self.parties.remove(party)
+                break
+
+    def delete_voter(self, voter_id):
+        """Deletes a voter from the list of voters."""
+        if not voter_id:
+            voter_id = input("Enter the first name of the voter you want to delete: ")
+
+        for voter in self.voters:
+            if voter.name == voter_id:
+                self.voters.remove(voter)
+                break
