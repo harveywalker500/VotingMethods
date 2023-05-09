@@ -1,34 +1,36 @@
-import sys
+from ClassHandler import *
+import os, sys
 
 
 def init():
-    """Initializes the program and sets the logger."""
-    print("""
----------------
-VotingMethods
-Written by:
-Harvey Walker
----------------""")
-    return "ERROR"
+    print("""-----------------
+- VotingMethods -
+- Written by    -
+- Harvey Walker -
+-----------------""")
 
 
 def main_menu():
     """Displays the main menu and handles user input."""
+    init()
     while True:
-        menu = str(input("VM> "))
-        menu = menu.split(" ")
-        match menu[0]:
-            case "help":
-                try:
-                    help_menu(menu[1])
-                except IndexError:
-                    help_menu("help")
-            case "exit":
-                sys.exit(0)
-            case "logging":
-                logging_menu(menu)
-            case _:
-                print("Invalid command. Type 'help' for a list of commands.")
+        try:
+            menu = str(input("VM> "))
+            menu = menu.split(" ")
+            match menu[0]:
+                case "help":
+                    try:
+                        help_menu(menu[1])
+                    except IndexError:
+                        help_menu("help")
+                case "exit":
+                    exit_program()
+                case "logging":
+                    logging_menu(menu)
+                case _:
+                    print("Invalid command. Type 'help' for a list of commands.")
+        except KeyboardInterrupt:
+            exit_program()
 
 
 def logging_menu(menu):
@@ -81,3 +83,9 @@ exit - Exits the program""")
 
         case _:
             print("No help available for this command, or command is not available.")
+
+
+def exit_program():
+    """Exits the program."""
+    print("\nGoodbye.")
+    sys.exit(0)
