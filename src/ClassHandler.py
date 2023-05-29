@@ -41,6 +41,10 @@ class Voter:
             civil_ideology (float): The civil ideology of the voter, ranging from 0 to 1.
             social_ideology (float): The social ideology of the voter, ranging from 0 to 1.
             election: The Election object the Voter is part of.
+            party_scores: A list of party scores based on the voter's ideological positions and the parties' ideological
+                positions.
+            most_suitable_party: The political party that is most suitable for the voter based on their ideological
+                positions.
         """
         self.id = str("V" + str(next(Voter.id_obj)))
         self.first_name: str = first_name
@@ -50,7 +54,9 @@ class Voter:
         self.diplomatic_ideology: float = diplomatic_ideology
         self.civil_ideology: float = civil_ideology
         self.social_ideology: float = social_ideology
-        self.preferred_party: Party = self.determine_most_suitable_party(election.parties)
+        self.generate_party_approval(election.parties)
+        self.party_scores = []
+        self.most_suitable_party = self.party_scores.index(min(self.party_scores))
 
     def __str__(self):
         """
@@ -70,17 +76,14 @@ class Voter:
         """
         return self.__str__()
 
-    def determine_most_suitable_party(self, parties):
+    def generate_party_approval(self, parties):
         """
-        Determines the most suitable party for the voter based on their ideological positions.
-
+        Generates a list of party scores based on the voter's ideological positions and the parties' ideological
+        positions.
         Args:
-            parties: A list of Party objects representing the available political parties in the election.
-
-        Returns:
-            The Party object that is most ideologically compatible with the voter.
+            parties: A list of Party objects.
         """
-        party_scores = []
+        self.party_scores = []
 
         for party in parties:
             voter_party_difference = [abs(self.economic_ideology - party.economic_ideology),
@@ -89,10 +92,9 @@ class Voter:
                                       abs(self.social_ideology - party.social_ideology)]
 
             voter_difference_total = sum(voter_party_difference)
-            party_scores.append(voter_difference_total)
+            self.party_scores.append(voter_difference_total)
 
-        most_suitable_party = parties[party_scores.index(min(party_scores))]
-        return most_suitable_party
+        self.most_suitable_party = parties[self.party_scores.index(min(self.party_scores))]
 
 
 class Party:
@@ -239,7 +241,7 @@ class Election:
         """Determines the winner of the election using First Past The Post. Returns the winner of the party."""
         for party in self.parties:
             for voter in tqdm(self.voters, desc=f"Counting votes for {party.name}", unit="voters"):
-                if voter.preferred_party == party:
+                if voter.most_suitable_party == party:
                     party.votes += 1
 
         sorted_parties = sorted(self.parties, key=lambda party: party.votes, reverse=True)
@@ -333,7 +335,10 @@ class Election:
                                  civil_ideology, social_ideology, self))
 
     def delete_party(self, party_id):
-        """Deletes a party from the list of parties."""
+        """Deletes a party from the list of parties.
+
+        Args:
+        - party_id (str): the ID of the party to delete."""
         if not party_id:
             party_id = input("Enter the ID of the party you want to delete: ")
 
@@ -343,7 +348,10 @@ class Election:
                 break
 
     def delete_voter(self, voter_id):
-        """Deletes a voter from the list of voters."""
+        """Deletes a voter from the list of voters.
+
+        Args:
+        - voter_id (str): the ID of the voter to delete."""
         if not voter_id:
             voter_id = input("Enter the first name of the voter you want to delete: ")
 
@@ -351,3 +359,31 @@ class Election:
             if voter.name == voter_id:
                 self.voters.remove(voter)
                 break
+
+    def get_party(self, party_id):
+        """Returns the party with the given ID.
+
+        Args:
+        - party_id (str): the ID of the party to get."""
+        if not party_id:
+            party_id = input("Enter the ID of the party you want to get: ")
+
+        for party in self.parties:
+            if party.id == party_id:
+                return party
+
+        return None
+
+    def get_voter(self, voter_id):
+        """Returns the voter with the given ID.
+
+        Args:
+        - voter_id (str): the ID of the voter to get."""
+        if not voter_id:
+            voter_id = input("Enter the ID of the voter you want to get: ")
+
+        for voter in self.voters:
+            if voter.id == voter_id:
+                return voter
+
+        return None
